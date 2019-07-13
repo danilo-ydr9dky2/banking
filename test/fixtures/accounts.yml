@@ -1,9 +1,17 @@
 # Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
-one:
-  password_digest: <%= BCrypt::Password.create('secret') %>
-  balance: 100
+frankie_a0:
+  user: frankie
+  balance: 0.0
 
-two:
-  password_digest: <%= BCrypt::Password.create('secret') %>
-  balance: 200
+frankie_a100:
+  user: frankie
+  balance: 100.0
+
+frankie_a200:
+  user: frankie
+  balance: 200.0
+
+norma_a500:
+  user: norma
+  balance: 500.0
