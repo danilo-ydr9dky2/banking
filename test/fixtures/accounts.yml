@@ -2,8 +2,8 @@
 
 one:
   password_digest: <%= BCrypt::Password.create('secret') %>
-  balance: 1.5
+  balance: 100
 
 two:
   password_digest: <%= BCrypt::Password.create('secret') %>
-  balance: 1.5
+  balance: 200
