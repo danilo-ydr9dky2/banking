@@ -25,7 +25,6 @@ Things you may want to cover:
 
 # TODO
 
-* add unique constraint to users.email
 * implement authorization flow
 * add AccountsController: POST, GET, DELETE
 * add balance API
