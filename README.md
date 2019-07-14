@@ -1,29 +1,38 @@
-# README
+# Banking
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+Banking é um sistema que gerencia contas bancárias de clientes, permitindo fazer transferências de um cliente para outro e expor o saldo atual da conta, sempre em reais.
 
-Things you may want to cover:
+## Funcionalidades
 
-* Ruby version
+## Versão de Ruby
 
-* System dependencies
+Este sistema foi desenvolvido em `ruby 2.6.3`.
 
-* Configuration
+## Dependências
 
-* Database creation
+Execute `bundle install` para instalar todas as dependências.
 
-* Database initialization
+## Configuração
 
-* How to run the test suite
+TODO
 
-* Services (job queues, cache servers, search engines, etc.)
+## Criação de banco de dados
 
-* Deployment instructions
+Caso o bando de dados ainda não exista, execute `bundle exec rails db:create` para criá-lo.
 
-* ...
+## Migrações de banco de dados
 
-# TODO
+Mantenha as migrações de bando de dados atualizadas: `bundle exec rails db:migrate`.
+
+## Testes
+
+Todos os testes podem ser executados com: `bundle exec rails test`.
+
+## Deployment instructions
+
+`bundle exec rails server`.
+
+## TODO
 
 * implement authorization flow
 * add AccountsController: POST, GET, DELETE
