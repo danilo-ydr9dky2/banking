@@ -2,10 +2,15 @@
 
 frankie:
   name: Frankie
-  email: frankie@gmail.com
+  email: frankie@email.com
   password_digest: <%= BCrypt::Password.create('lindy') %>
 
 norma:
   name: Norma
-  email: norma@gmail.com
+  email: norma@email.com
   password_digest: <%= BCrypt::Password.create('hop') %>
+
+accountless:
+  name: Accountless
+  email: accountless@email.com
+  password_digest: <%= BCrypt::Password.create('none') %>
