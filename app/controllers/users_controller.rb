@@ -1,4 +1,4 @@
-# TODO: implement authorization
+# TODO: implement authentication
 class UsersController < ApplicationController
   def create
       user = User.create(
