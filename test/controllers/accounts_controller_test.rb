@@ -40,7 +40,7 @@ class AccountsControllerTest < ActionDispatch::IntegrationTest
 
   test "shows an existing account" do
     expected_account = accounts(:frankie_a100)
-    get user_account_url(user_id: expected_account.user_id, id: expected_account.id)
+    get account_url(id: expected_account.id)
     assert_response(:success)
     assert_equal({
       id: expected_account.id,
@@ -49,62 +49,71 @@ class AccountsControllerTest < ActionDispatch::IntegrationTest
     }, parsed_response.except(:created_at, :updated_at))
   end
 
-  test "shows an account for a non-existing user" do
-    get user_account_url(user_id: not_found_user_id, id: accounts(:frankie_a0).id)
-    assert_response(:not_found)
-  end
-
   test "shows a non-existing account" do
-    get user_account_url(user_id: users(:frankie).id, id: not_found_account_id)
-    assert_response(:not_found)
-  end
-
-  test "shows an account for an existing but incorrect user" do
-    get user_account_url(user_id: users(:frankie).id, id: accounts(:norma_a500).id)
+    get account_url(id: not_found_account_id)
     assert_response(:not_found)
   end
 
   test "gets balance" do
-    get user_account_balance_url(user_id: users(:frankie).id, account_id: accounts(:frankie_a100).id)
+    get account_balance_url(account_id: accounts(:frankie_a100).id)
     assert_response(:success)
     assert_equal(100.0, parsed_response[:balance])
   end
 
-  test "gets balance for non-existing user" do
-    get user_account_balance_url(user_id: not_found_user_id, account_id: accounts(:frankie_a100).id)
-    assert_response(:not_found)
-  end
-
   test "gets balance for non-existing account" do
-    get user_account_balance_url(user_id: users(:frankie).id, account_id: not_found_account_id)
-    assert_response(:not_found)
-  end
-
-  test "gets balance for existing but incorrect user" do
-    get user_account_balance_url(user_id: users(:frankie).id, account_id: accounts(:norma_a500).id)
+    get account_balance_url(account_id: not_found_account_id)
     assert_response(:not_found)
   end
 
   test "deletes account successfully" do
-    delete user_account_url(user_id: users(:frankie).id, id: accounts(:frankie_a0).id)
+    delete account_url(id: accounts(:frankie_a0).id)
     assert_response(:success)
 
-    get user_account_url(user_id: users(:frankie).id, id: accounts(:frankie_a0).id)
-    assert_response(:not_found)
-  end
-
-  test "deletes account for non-existing user" do
-    delete user_account_url(user_id: not_found_user_id, id: accounts(:frankie_a0).id)
+    get account_url(id: accounts(:frankie_a0).id)
     assert_response(:not_found)
   end
 
   test "deletes account for non-existing account" do
-    delete user_account_url(user_id: users(:frankie).id, id: not_found_account_id)
+    delete account_url(id: not_found_account_id)
     assert_response(:not_found)
   end
 
-  test "deletes account for existing but incorrect user" do
-    delete user_account_url(user_id: users(:frankie).id, id: accounts(:norma_a500).id)
-    assert_response(:not_found)
+  test "transfer less than source account balance" do
+    source, dest = accounts(:frankie_a100, :frankie_a0)
+    post "/accounts/#{source.id}/transfer/#{dest.id}", params: { amount: 99.99 }
+    assert_response(:success)
+
+    get account_url(id: source.id)
+    assert_in_epsilon(0.01, parsed_response[:balance], 1e-6)
+
+    get account_url(id: dest.id)
+    assert_in_epsilon(99.99, parsed_response[:balance], 1e-6)
+  end
+
+  test "transfer amount equal to the source account balance" do
+    source, dest = accounts(:frankie_a100, :frankie_a0)
+    post "/accounts/#{source.id}/transfer/#{dest.id}", params: { amount: 100.0 }
+    assert_response(:success)
+
+    get account_url(id: source.id)
+    assert_in_epsilon(0.0, parsed_response[:balance], 1e-6)
+
+    get account_url(id: dest.id)
+    assert_in_epsilon(100.0, parsed_response[:balance], 1e-6)
+  end
+
+  test "transfer more than source account balance" do
+    source, dest = accounts(:frankie_a100, :frankie_a0)
+    post "/accounts/#{source.id}/transfer/#{dest.id}", params: { amount: 100.01 }
+    assert_response(:forbidden)
+    assert_match("insufficient funds", parsed_response[:errors].first)
+
+    # source account's balance did not change
+    get account_url(id: source.id)
+    assert_in_epsilon(source.balance, parsed_response[:balance], 1e-6)
+
+    # destination account's balance did not change
+    get account_url(id: dest.id)
+    assert_in_epsilon(dest.balance, parsed_response[:balance], 1e-6)
   end
 end
