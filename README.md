@@ -34,8 +34,6 @@ Todos os testes podem ser executados com: `bundle exec rails test`.
 
 ## TODO
 
-* implement authorization flow
-* add AccountsController: POST, GET, DELETE
-* add balance API
 * add transfer API
+* implement authorization flow
 * write documentation
