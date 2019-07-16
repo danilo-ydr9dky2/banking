@@ -32,13 +32,24 @@ class AccountsController < ApplicationController
     render json: { balance: account.balance }
   end
 
-  # TODO: implement amount validation
   def transfer
-    source_account = Account.find_by(id: params['account_id'])
-    destination_account = Account.find_by(id: params['destination_account_id'])
+    source_id = params['account_id'].try(:to_i)
+    dest_id = params['destination_account_id'].try(:to_i)
+
+    # Account.lock yields a SELECT FOR UPDATE on Postgresql
+    accounts_hash = Account.lock.where(
+      id: [source_id, dest_id]
+    ).to_h { |act| [act.id, act] }
+    source_account = accounts_hash[source_id]
+    destination_account = accounts_hash[dest_id]
+
+    # Return 404 in case neither source nor destination accounts are found
     return not_found unless source_account.present? and destination_account.present?
 
+    # TODO: implement amount validation
     amount = params['amount'].to_f
+
+    # Update balances within a transaction
     Account.transaction do
       if source_account.balance < amount
         raise InsufficientFundsError.new("source account has insufficient funds to proceed with this transaction")
