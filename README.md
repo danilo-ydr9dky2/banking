@@ -34,6 +34,7 @@ Todos os testes podem ser executados com: `bundle exec rails test`.
 
 ## TODO
 
-* move away from a float type to represent amount
 * implement authorization flow
+* move away from a float type to represent amount
+* implementar histórico de transfêrencias
 * write documentation
