@@ -4,6 +4,7 @@ class AccountsController < ApplicationController
 
   before_action :authenticate_user!
 
+  # GET /users/:user_id/accounts
   def index
     user = User.find_by(id: params['user_id'])
     return not_found unless user.present?
@@ -11,6 +12,7 @@ class AccountsController < ApplicationController
     render json: { accounts: user.accounts }
   end
 
+  # POST /users/:user_id/accounts
   def create
     user = User.find_by(id: params['user_id'])
     return not_found unless user.present?
@@ -23,6 +25,7 @@ class AccountsController < ApplicationController
     end
   end
 
+  # GET /accounts/:id
   def show
     account = Account.find_by(id: params['id'])
     return not_found unless account.present?
@@ -30,13 +33,18 @@ class AccountsController < ApplicationController
     render json: account
   end
 
+  # GET /accounts/:account_id/balance
   def balance
     account = Account.find_by(id: params['account_id'])
     return not_found unless account.present?
     return forbidden unless account.user == current_user
-    render json: { balance: account.balance }
+    render json: { balance: account.balance, balance_in_cents: account.balance_in_cents }
   end
 
+  # POST /accounts/:account_id/transfer/:destination_account_id
+  #
+  # Request body:
+  #     - amount: string - amount of reais (BRL) to be transferred, like "9,99"
   def transfer
     source_id = params['account_id'].try(:to_i)
     dest_id = params['destination_account_id'].try(:to_i)
@@ -53,16 +61,19 @@ class AccountsController < ApplicationController
     # Return 403 in case the source account isn't owned by the logged in user
     return forbidden unless source_account.user == current_user
 
-    # TODO: implement amount validation
-    amount = params['amount'].to_f
+    # Makes sure amount is in the right format
+    amount = parse_amount(params)
+    if amount.nil?
+        return render json: { errors: ["amount must be in the format 9,99"] }, status: :bad_request
+    end
 
-    # Update balances within a transaction
+    # Update `balance_in_cents` within a transaction
     Account.transaction do
-      if source_account.balance < amount
+      if source_account.balance_in_cents < amount
         raise InsufficientFundsError.new("source account has insufficient funds to proceed with this transaction")
       end
-      source_account.balance -= amount
-      destination_account.balance += amount 
+      source_account.balance_in_cents -= amount
+      destination_account.balance_in_cents += amount
       source_account.save!
       destination_account.save!
     rescue InsufficientFundsError => e
@@ -77,5 +88,14 @@ class AccountsController < ApplicationController
     return not_found unless account.present?
     return forbidden unless account.user == current_user
     account.destroy
+  end
+
+  private
+
+  def parse_amount(params)
+    return unless params['amount'].present?
+    match_data = params['amount'].to_s.match(/(\d+),(\d{2})/)
+    return unless match_data.present?
+    match_data[1].to_i * 100 + match_data[2].to_i
   end
 end

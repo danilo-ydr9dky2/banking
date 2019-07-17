@@ -58,6 +58,7 @@ class AccountsControllerTest < ActionDispatch::IntegrationTest
     assert_equal({
       id: expected_account.id,
       balance: expected_account.balance,
+      balance_in_cents: expected_account.balance_in_cents,
       user_id: expected_account.user_id
     }, parsed_response.except(:created_at, :updated_at))
   end
@@ -76,7 +77,8 @@ class AccountsControllerTest < ActionDispatch::IntegrationTest
     a100 = accounts(:frankie_a100)
     get account_balance_url(account_id: a100.id), headers: auth_headers(a100.user)
     assert_response(:success)
-    assert_equal(100.0, parsed_response[:balance])
+    assert_equal("100,00", parsed_response[:balance])
+    assert_equal(10000, parsed_response[:balance_in_cents])
   end
 
   test "fails to get balance for another user's account" do
@@ -110,46 +112,65 @@ class AccountsControllerTest < ActionDispatch::IntegrationTest
 
   test "transfer less than source account balance" do
     source, dest = accounts(:frankie_a100, :frankie_a0)
-    post "/accounts/#{source.id}/transfer/#{dest.id}", params: { amount: 99.99 }, headers: auth_headers(source.user)
+    post "/accounts/#{source.id}/transfer/#{dest.id}", params: { amount: "99,99" }, headers: auth_headers(source.user)
     assert_response(:success)
 
     get account_url(id: source.id), headers: auth_headers(source.user)
-    assert_in_epsilon(0.01, parsed_response[:balance], 1e-6)
+    assert_equal("0,01", parsed_response[:balance])
+    assert_equal(1, parsed_response[:balance_in_cents])
 
     get account_url(id: dest.id), headers: auth_headers(dest.user)
-    assert_in_epsilon(99.99, parsed_response[:balance], 1e-6)
+    assert_equal("99,99", parsed_response[:balance])
+    assert_equal(9999, parsed_response[:balance_in_cents])
   end
 
   test "transfer amount equal to the source account balance" do
     source, dest = accounts(:frankie_a100, :frankie_a0)
-    post "/accounts/#{source.id}/transfer/#{dest.id}", params: { amount: 100.0 }, headers: auth_headers(source.user)
+    post "/accounts/#{source.id}/transfer/#{dest.id}", params: { amount: "100,00" }, headers: auth_headers(source.user)
     assert_response(:success)
 
     get account_url(id: source.id), headers: auth_headers(source.user)
-    assert_in_epsilon(0.0, parsed_response[:balance], 1e-6)
+    assert_equal("0,00", parsed_response[:balance])
+    assert_equal(0, parsed_response[:balance_in_cents])
 
     get account_url(id: dest.id), headers: auth_headers(dest.user)
-    assert_in_epsilon(100.0, parsed_response[:balance], 1e-6)
+    assert_equal("100,00", parsed_response[:balance])
+    assert_equal(10000, parsed_response[:balance_in_cents])
   end
 
   test "transfer more than source account balance" do
     source, dest = accounts(:frankie_a100, :frankie_a0)
-    post "/accounts/#{source.id}/transfer/#{dest.id}", params: { amount: 100.01 }, headers: auth_headers(source.user)
+    post "/accounts/#{source.id}/transfer/#{dest.id}", params: { amount: "100,01" }, headers: auth_headers(source.user)
     assert_response(:forbidden)
     assert_match("insufficient funds", parsed_response[:errors].first)
 
     # source account's balance did not change
     get account_url(id: source.id), headers: auth_headers(source.user)
-    assert_in_epsilon(source.balance, parsed_response[:balance], 1e-6)
+    assert_equal(source.balance, parsed_response[:balance])
 
     # destination account's balance did not change
     get account_url(id: dest.id), headers: auth_headers(dest.user)
-    assert_in_epsilon(dest.balance, parsed_response[:balance], 1e-6)
+    assert_equal(dest.balance, parsed_response[:balance])
   end
 
   test "fails to transfer logged in as destination account" do
     source, dest = accounts(:norma_a500, :frankie_a0)
-    post "/accounts/#{source.id}/transfer/#{dest.id}", params: { amount: 1.00 }, headers: auth_headers(dest.user)
+    post "/accounts/#{source.id}/transfer/#{dest.id}", params: { amount: "1.00" }, headers: auth_headers(dest.user)
     assert_response(:forbidden)
+
+    # source account's balance did not change
+    get account_url(id: source.id), headers: auth_headers(source.user)
+    assert_equal(source.balance, parsed_response[:balance])
+
+    # destination account's balance did not change
+    get account_url(id: dest.id), headers: auth_headers(dest.user)
+    assert_equal(dest.balance, parsed_response[:balance])
+  end
+
+  test "fails to transfer due to invalid amount" do
+    source, dest = accounts(:frankie_a100, :frankie_a0)
+    post "/accounts/#{source.id}/transfer/#{dest.id}", params: { amount: 1 }, headers: auth_headers(source.user)
+    assert_response(:bad_request)
+    assert_match("must be in the format 9,99", parsed_response[:errors].first)
   end
 end

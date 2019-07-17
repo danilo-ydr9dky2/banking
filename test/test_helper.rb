@@ -12,7 +12,8 @@ class ActiveSupport::TestCase
   end
 
   def auth_headers(user)
-    Devise::JWT::TestHelpers.auth_headers({}, user)
+    headers = { 'Accept' => 'application/json' }
+    Devise::JWT::TestHelpers.auth_headers(headers, user)
   end
 
   # It assumes there is no such user id in test/fixtures/users.yml

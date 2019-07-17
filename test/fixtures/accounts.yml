@@ -2,16 +2,24 @@
 
 frankie_a0:
   user: frankie
-  balance: 0.0
+  balance_in_cents: 0
 
 frankie_a100:
   user: frankie
-  balance: 100.0
+  balance_in_cents: 10000  # R$100,00
 
 frankie_a200:
   user: frankie
-  balance: 200.0
+  balance_in_cents: 20000  # R$200,00
+
+norma_a901:
+  user: norma
+  balance_in_cents: 901  # R$9,01
+
+norma_a9999:
+  user: norma
+  balance_in_cents: 9999  # R$99,99
 
 norma_a500:
   user: norma
-  balance: 500.0
+  balance_in_cents: 50000  # R$500,00

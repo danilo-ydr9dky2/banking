@@ -1,4 +1,7 @@
 class UsersController < ApplicationController
+
+  before_action :authenticate_user!, except: [:create]
+
   def create
     begin
       user = User.create(
@@ -18,7 +21,6 @@ class UsersController < ApplicationController
   end
 
   def show
-    authenticate_user!
     user = User.find_by(id: params[:id])
     return not_found unless user.present?
     return forbidden unless user == current_user
@@ -26,7 +28,6 @@ class UsersController < ApplicationController
   end
 
   def destroy
-    authenticate_user!
     user = User.find_by(id: params[:id])
     return not_found unless user.present?
     return forbidden unless user == current_user
