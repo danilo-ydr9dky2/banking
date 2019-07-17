@@ -12,6 +12,9 @@ gem 'puma', '~> 3.12.0'
 # Use ActiveModel has_secure_password
 gem 'bcrypt', '~> 3.1.13'
 
+# Use devise-jwt for authentication
+gem "devise-jwt", "~> 0.5.9"
+
 # Reduces boot times through caching; required in config/boot.rb
 gem 'bootsnap', '>= 1.1.0', require: false
 
