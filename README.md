@@ -42,7 +42,7 @@ E, finalmente, execute o servidor com o seguinte comando:
 
 ## TODO
 
-* implement a revocation policy for auth with JWT
+* validate amount at the controller layer
 * move away from a float type to represent amount
 * implementar histórico de transfêrencias
 * write documentation
