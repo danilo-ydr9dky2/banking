@@ -42,8 +42,6 @@ E, finalmente, execute o servidor com o seguinte comando:
 
 ## TODO
 
-* validate amount at the controller layer
-* move away from a float type to represent amount
 * implementar histórico de transfêrencias
 * write documentation
 * consider using dotenv gem to improve dev experience
