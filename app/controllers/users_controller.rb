@@ -1,33 +1,35 @@
-# TODO: implement authentication
 class UsersController < ApplicationController
   def create
+    begin
       user = User.create(
-          name: params[:name],
-          email: params[:email],
-          password: params[:password]
+        name: params[:name],
+        email: params[:email],
+        password: params[:password]
       )
-      if user.valid?
-          render_user(user)
-      else
-          render json: { errors: user.errors.messages }, status: :bad_request
-      end
+    rescue ActiveRecord::RecordNotUnique => e
+      errors = { email: [ "email is already taken" ] }
+      return render json: { errors: errors }, status: :bad_request
+    end
+    if user.valid?
+      render json: user
+    else
+      render json: { errors: user.errors.messages }, status: :bad_request
+    end
   end
 
   def show
-      user = User.find_by(id: params[:id])
-      return not_found unless user.present?
-      render_user(user)
+    authenticate_user!
+    user = User.find_by(id: params[:id])
+    return not_found unless user.present?
+    return forbidden unless user == current_user
+    render json: user
   end
 
   def destroy
-      user = User.find_by(id: params[:id])
-      return not_found unless user.present?
-      user.destroy
-  end
-
-  private
-
-  def render_user(user)
-      render json: user, except: [:password_digest]
+    authenticate_user!
+    user = User.find_by(id: params[:id])
+    return not_found unless user.present?
+    return forbidden unless user == current_user
+    user.destroy
   end
 end

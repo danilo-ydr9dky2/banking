@@ -1,5 +1,5 @@
 Rails.application.routes.draw do
-  devise_for :users
+  devise_for :users, controllers: { sessions: 'sessions' }
   resources :users, only: [:create, :show, :destroy] do
     resources :accounts, only: [:index, :create, :show, :destroy, :transfer], shallow: true do
       get '/balance', to: 'accounts#balance'

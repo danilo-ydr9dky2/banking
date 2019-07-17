@@ -26,15 +26,24 @@ Mantenha as migrações de bando de dados atualizadas: `bundle exec rails db:mig
 
 ## Testes
 
-Todos os testes podem ser executados com: `bundle exec rails test`.
+Todos os testes podem ser executados com: `env $(cat .env.test) bundle exec rails test`.
 
 ## Deployment instructions
 
-`bundle exec rails server`.
+Copie o arquivo `.env.development.default` como `.env.development`.
+
+`cp .env.development.default .env.development`
+
+Edite as chaves secretas em `.env.development`. Dica: use `bundle exec rails secret` para gerar os segredos.
+
+E, finalmente, execute o servidor com o seguinte comando:
+
+`env $(cat .env.development) exec rails server`
 
 ## TODO
 
-* implement authorization flow
+* implement a revocation policy for auth with JWT
 * move away from a float type to represent amount
 * implementar histórico de transfêrencias
 * write documentation
+* consider using dotenv gem to improve dev experience

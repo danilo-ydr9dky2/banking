@@ -1,17 +1,20 @@
-# TODO: implement authentication
 class AccountsController < ApplicationController
   class InsufficientFundsError < StandardError
   end
 
+  before_action :authenticate_user!
+
   def index
     user = User.find_by(id: params['user_id'])
     return not_found unless user.present?
+    return forbidden unless user == current_user
     render json: { accounts: user.accounts }
   end
 
   def create
     user = User.find_by(id: params['user_id'])
     return not_found unless user.present?
+    return forbidden unless user == current_user
     account = Account.create(user_id: user.id)
     if account.valid?
       render json: account
@@ -23,12 +26,14 @@ class AccountsController < ApplicationController
   def show
     account = Account.find_by(id: params['id'])
     return not_found unless account.present?
+    return forbidden unless account.user == current_user
     render json: account
   end
 
   def balance
     account = Account.find_by(id: params['account_id'])
     return not_found unless account.present?
+    return forbidden unless account.user == current_user
     render json: { balance: account.balance }
   end
 
@@ -45,6 +50,8 @@ class AccountsController < ApplicationController
 
     # Return 404 in case neither source nor destination accounts are found
     return not_found unless source_account.present? and destination_account.present?
+    # Return 403 in case the source account isn't owned by the logged in user
+    return forbidden unless source_account.user == current_user
 
     # TODO: implement amount validation
     amount = params['amount'].to_f
@@ -68,6 +75,7 @@ class AccountsController < ApplicationController
   def destroy
     account = Account.find_by(id: params['id'])
     return not_found unless account.present?
+    return forbidden unless account.user == current_user
     account.destroy
   end
 end
