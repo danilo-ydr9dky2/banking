@@ -3,14 +3,14 @@
 frankie:
   name: Frankie
   email: frankie@email.com
-  password_digest: <%= BCrypt::Password.create('lindy') %>
+  encrypted_password: <%= BCrypt::Password.create('lindyhop') %>
 
 norma:
   name: Norma
   email: norma@email.com
-  password_digest: <%= BCrypt::Password.create('hop') %>
+  encrypted_password: <%= BCrypt::Password.create('charleston') %>
 
 accountless:
   name: Accountless
   email: accountless@email.com
-  password_digest: <%= BCrypt::Password.create('none') %>
+  encrypted_password: <%= BCrypt::Password.create('notpass') %>
