@@ -231,15 +231,62 @@ Response status code: 403 Forbidden
 
 ### Sessão (*sign_in/sign_out*)
 
-* Fazer login: `POST /users/sign_in`
+#### Fazer login: `POST /users/sign_in`
 
 **Sucesso**
-**Sem autorização**
 
-* Fazer logout: `POST /users/sign_out`
+```
+POST /users/sign_in
+Body: {
+  "user": {
+    "email": "alice@email.com",
+    "password": "secret"
+  }
+}
+Response status code: 200 OK
+Response header: "Authorization: Bearer [token]"
+Response body: {
+  "id": 1,
+  "name": "Alice",
+  "email": "alice@email.com",
+  "created_at": "2019-07-18T13:33:44.476Z",
+  "updated_at"=>"2019-07-18T13:33:44.476Z"
+}
+```
+
+**Email ou senha incorretos**
+```
+POST /users/sign_in
+Body: {
+  "user": {
+    "email": "alice@email.com",
+    "password": "[wrong password]"
+  }
+}
+Response status code: 401 Unauthorized
+Response body: {
+  "error": "Invalid Email or password."
+}
+```
+
+#### Fazer logout: `DELETE /users/sign_out`
 
 **Sucesso**
+
+```
+DELETE /users/sign_out
+Header: "Authorization: Bearer [token]"
+Response status code: 204 No Content
+```
+
 **Sem autenticação**
+```
+DELETE /users/sign_out
+Response status code: 401 Unauthorized
+Response body: {
+  "error": "You need to sign in or sign up before continuing."
+}
+```
 
 ### Conta bancária (*Account*)
 
