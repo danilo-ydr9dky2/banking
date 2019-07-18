@@ -473,8 +473,10 @@ Response body: {
 }
 ```
 
-## TODO
+## Como contribuir
 
-* consider using dotenv gem to improve dev experience
-* corrigir resposta de get all accounts for a user
-* corrigir resposta de get balance
+Para contribuir com este projeto, crie uma *issue* ou envie uma *pull request* com as mudanças sugeridas.
+
+Aqui estão algumas melhorias que este projeto poderia ter:
+* Usar [dotenv](https://github.com/bkeepers/dotenv) para faciliar o uso de variáveis de ambiente em desenvolvimento.
+* Tornar as mensagens de erro consistentes entre si.
