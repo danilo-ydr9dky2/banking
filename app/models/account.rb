@@ -2,16 +2,24 @@ class Account < ApplicationRecord
   belongs_to :user
   has_many :transactions
 
-  #TODO: use ActiveRecord caching instead
-  @cents = nil
+  def self.lock_for_update(*accounts)
+    # it sorts accounts by id first to prevent deadlocks
+    sorted_by_id = accounts.sort { |a, b| a.id <=> b.id }
+    # lock! yields a SELECT FOR UPDATE on Postgresql
+    sorted_by_id.each(&:lock!)
+  end
 
   def balance
     format_to_reais(balance_in_cents)
   end
 
   def balance_in_cents
-    return @cents unless @cents.nil?
-    @cents = fetch_balance_in_cents
+    Rails.cache.fetch("#{cache_key_with_version}/balance_in_cents") do
+      total_by_kind = Transaction.select(:amount_in_cents).where(account_id: id).group(:kind).sum(:amount_in_cents)
+      credit = total_by_kind['credit'] or 0
+      debit = total_by_kind['debit'] or 0
+      credit.to_i - debit.to_i
+    end
   end
 
   def has_funds?(amount_in_cents)
@@ -23,21 +31,14 @@ class Account < ApplicationRecord
     super(options.merge({ except: [:last_transaction_at], methods: [:balance, :balance_in_cents] }))
   end
 
-  def self.lock_for_update(*accounts)
-    # it sorts accounts by id first to prevent deadlocks
-    sorted_by_id = accounts.sort { |a, b| a.id <=> b.id }
-    # lock! yields a SELECT FOR UPDATE on Postgresql
-    sorted_by_id.each(&:lock!)
+  # used by cache_key_with_version
+  # new transactions invalidates cache keys
+  def cache_version
+    return unless last_transaction_at.present?
+    last_transaction_at.utc.to_s(:usec)
   end
 
   private
-
-  def fetch_balance_in_cents
-    total_by_kind = Transaction.select(:amount_in_cents).where(account_id: id).group(:kind).sum(:amount_in_cents)
-    credit = total_by_kind['credit'] or 0
-    debit = total_by_kind['debit'] or 0
-    credit.to_i - debit.to_i
-  end
 
   # It will look like "9,99" and "0,01".
   # Note there will always be two digits after the comma.

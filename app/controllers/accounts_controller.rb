@@ -64,7 +64,6 @@ class AccountsController < ApplicationController
     end
 
     # Create credit and debit transactions within a transaction
-    # TODO: maybe add a last_transaction_at columns in the accounts table
     Account.transaction do
       # Hold locks on both accounts while the transactions are being created
       Account.lock_for_update(source_account, destination_account)
