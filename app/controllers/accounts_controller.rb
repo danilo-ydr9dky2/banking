@@ -76,13 +76,17 @@ class AccountsController < ApplicationController
         amount_in_cents: amount_in_cents,
         kind: :debit
       )
+      debit.save!
+      source_account.last_transaction_at = debit.created_at
+      source_account.save!
       credit = Transaction.create(
         account_id: destination_account.id,
         amount_in_cents: amount_in_cents,
         kind: :credit
       )
-      debit.save!
       credit.save!
+      destination_account.last_transaction_at = credit.created_at
+      destination_account.save!
     rescue InsufficientFundsError => e
       return render json: { errors: [e.message] }, status: :forbidden
     end
