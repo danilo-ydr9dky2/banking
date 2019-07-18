@@ -47,7 +47,7 @@ class AccountsController < ApplicationController
   # POST /accounts/:account_id/transfer/:destination_account_id
   #
   # Request body:
-  #     - amount: string - amount of reais (BRL) to be transferred, like "9,99"
+  #   - amount: string - amount of reais (BRL) to be transferred, like "9,99"
   def transfer
     source_account = Account.find_by(id: params['account_id'])
     destination_account = Account.find_by(id: params['destination_account_id'])
@@ -93,6 +93,7 @@ class AccountsController < ApplicationController
     render json: { status: "success" }, status: :ok
   end
 
+  # DELETE /accounts/:id
   def destroy
     account = Account.find_by(id: params['id'])
     return not_found unless account.present?

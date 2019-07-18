@@ -13,6 +13,9 @@ class Account < ApplicationRecord
     format_to_reais(balance_in_cents)
   end
 
+  # Balance is computed based on the transactions history
+  # It is then put in Rails.cache by using `last_transaction_at` as part of the key.
+  # That means new transactions, which make cached balance stale, invalidate cache keys
   def balance_in_cents
     Rails.cache.fetch("#{cache_key_with_version}/balance_in_cents") do
       total_by_kind = Transaction.select(:amount_in_cents).where(account_id: id).group(:kind).sum(:amount_in_cents)
@@ -22,6 +25,7 @@ class Account < ApplicationRecord
     end
   end
 
+  # whether the current account has at least `amount_in_cents` in funds.
   def has_funds?(amount_in_cents)
     amount_in_cents <= balance_in_cents
   end

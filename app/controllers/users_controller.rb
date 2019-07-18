@@ -2,6 +2,12 @@ class UsersController < ApplicationController
 
   before_action :authenticate_user!, except: [:create]
 
+  # POST /users
+  #
+  # Request body:
+  #   - name: string
+  #   - email: string
+  #   - password: string
   def create
     begin
       user = User.create(
@@ -20,6 +26,7 @@ class UsersController < ApplicationController
     end
   end
 
+  # GET /users/:id
   def show
     user = User.find_by(id: params[:id])
     return not_found unless user.present?
@@ -27,6 +34,7 @@ class UsersController < ApplicationController
     render json: user
   end
 
+  # DELETE /users:id
   def destroy
     user = User.find_by(id: params[:id])
     return not_found unless user.present?
