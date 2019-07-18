@@ -20,7 +20,7 @@ class Account < ApplicationRecord
 
   # Adds the formatted balance in reais to the serialized JSON.
   def to_json(options = {})
-    super(options.merge({ methods: [:balance] }))
+    super(options.merge({ methods: [:balance, :balance_in_cents] }))
   end
 
   def self.lock_for_update(*accounts)
