@@ -55,7 +55,7 @@ env $(cat .env.development) bundle exec rails db:setup
 Para manter as migrações de bando de dados atualizadas, execute o seguinte comando. Note que `rails db:setup` já vai ter executado todas as migrações pendentes no passo anterior, então você pode pular este passo durante a configuração inicial.
 
 ```
-`env $(cat .env.development) bundle exec rails db:migrate
+env $(cat .env.development) bundle exec rails db:migrate
 ```
 
 ## Testes
@@ -88,7 +88,7 @@ Instale as dependências e configure o banco de dados como no ambiente de desenv
 
 ### Usuário (*User*)
 
-* Criar um novo usuário: `POST /users`
+#### Criar um novo usuário: `POST /users`
 
 **Autenticação**: não
 
@@ -174,7 +174,7 @@ Response body: {
 }
 ```
 
-* Obter usuário: `GET /users/:id`
+#### Obter usuário: `GET /users/:id`
 
 **Autenticação**: sim
 
@@ -199,14 +199,14 @@ Header: "Authorization: Bearer [token for user 1]"
 Response status code: 403 Forbidden
 ```
 
-**Usuário não existent**
+**Usuário inexistente**
 ```
 GET /users/1
 Header: "Authorization: Bearer [token]"
 Response status code: 404 Not Found
 ```
 
-* Deletar usuário: `DELETE /users/:id` 
+#### Deletar usuário: `DELETE /users/:id` 
 
 **Sucesso**
 ```
@@ -245,7 +245,7 @@ Response status code: 403 Forbidden
 
 Todos os endpoints de conta bancária exigem **autenticação**.
 
-* Criar nova conta: `POST /users/:user_id/accounts`
+#### Criar nova conta: `POST /users/:user_id/accounts`
 
 **Sucesso**
 ```
@@ -276,7 +276,7 @@ Header: "Authorization: Bearer [token for user 1]"
 Response status code: 403 Forbidden
 ```
 
-* Listar contas de um usuário: `GET /users/:user_id/accounts`
+#### Listar contas de um usuário: `GET /users/:user_id/accounts`
 
 **Sucesso**
 ```
@@ -305,7 +305,7 @@ Header: "Authorization: Bearer [token for user 1]"
 Response status code: 403 Forbidden
 ```
 
-* Obter conta: `GET /accounts/:id`
+#### Obter conta: `GET /accounts/:id`
 
 **Sucesso**
 ```
@@ -336,7 +336,7 @@ Header: "Authorization: Bearer [token for user who doesn't own this account]"
 Response status code: 403 Forbidden
 ```
 
-* Deletar conta: `DELETE /accounts:id`
+#### Deletar conta: `DELETE /accounts:id`
 
 **Sucesso**
 ```
@@ -359,7 +359,7 @@ Header: "Authorization: Bearer [token for user who doesn't own this account]"
 Response status code: 403 Forbidden
 ```
 
-* Consultar saldo: `GET /accounts/:account_id/balance`
+#### Consultar saldo: `GET /accounts/:account_id/balance`
 
 **Sucesso**
 ```
@@ -386,7 +386,45 @@ Header: "Authorization: Bearer [token for user who doesn't own this account]"
 Response status code: 403 Forbidden
 ```
 
-* Transferir dinheiro: `POST /accounts/:account_id/transfer/:destination_account_id`
+#### Transferir dinheiro: `POST /accounts/:account_id/transfer/:destination_account_id`
+
+**Sucesso**
+```
+POST /accounts/1/transfer/2
+Header: "Authorization: Bearer [token]"
+Body: { "amount": "10,01" }
+Response status code: 200 OK
+```
+
+**Erro de formatação**
+```
+POST /accounts/1/transfer/2
+Header: "Authorization: Bearer [token]"
+Body: { "amount": "10,1" }
+Response status code: 400 Bad Request
+Response body: {
+  "errors": ["amount must be in the format 9,99"]
+}
+```
+
+**Sem autorização**
+```
+POST /accounts/1/transfer/2
+Header: "Authorization: Bearer [token as user who doesn't own account 1]"
+Body: { "amount": "10,01" }
+Response status code: 403 Forbidden
+```
+
+**Saldo insuficiente**
+```
+POST /accounts/1/transfer/2
+Header: "Authorization: Bearer [token]"
+Body: { "amount": "1000,00" }
+Response status code: 403 Forbidden
+Response body: {
+  "errors": ["source account has insufficient funds to proceed with this transaction"]
+}
+```
 
 ## TODO
 
