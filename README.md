@@ -84,7 +84,312 @@ Configure o ambiente de produção usando o arquivo `.env.production` para defin
 
 Instale as dependências e configure o banco de dados como no ambiente de desenvolvimento. Lembre-se de usar o arquivo `.env.production` para definir as variáveis de ambiente.
 
+## HTTP API
+
+### Usuário (*User*)
+
+* Criar um novo usuário: `POST /users`
+
+**Autenticação**: não
+
+**Sucesso**
+```
+POST /users
+Body: {
+  "name": "Alice",
+  "email": "alice@email.com",
+  "password": "secret"
+}
+Response status code: 200 OK
+Response body: {
+  "id": 1,
+  "name": "Alice",
+  "email": "alice@email.com",
+  "created_at": "2019-07-18T13:33:44.476Z",
+  "updated_at"=>"2019-07-18T13:33:44.476Z"
+}
+```
+
+**Senha inválida**
+```
+POST /users
+Body: {
+  "name": "Alice",
+  "email": "alice@email.com",
+  "password": "short"
+}
+Response status code: 400 Bad Request
+Response body: {
+  "errors": {
+    "password": ["is too short (minimum is 6 characters)"]
+  }
+}
+```
+
+**Email já cadastrado**
+```
+POST /users
+Body: {
+  "name": "Alice",
+  "email": "alice@email.com",
+  "password": "secret"
+}
+Response status code: 400 Bad Request
+Response body: {
+  "errors": {
+    "email": ["email is already taken"]
+  }
+}
+```
+
+**Email inválido**
+```
+POST /users
+Body: {
+  "name": "Alice",
+  "email": "aliceemail",
+  "password": "secret"
+}
+Response status code: 400 Bad Request
+Response body: {
+  "errors": {
+    "email": ["is invalid"]
+  }
+}
+```
+
+**Nome vazio**
+```
+POST /users
+Body: {
+  "name": "",
+  "email": "alice@email.com",
+  "password": "secret"
+}
+Response status code: 400 Bad Request
+Response body: {
+  "errors": {
+    "name": ["can't be blank"]
+  }
+}
+```
+
+* Obter usuário: `GET /users/:id`
+
+**Autenticação**: sim
+
+**Sucesso**
+```
+GET /users/1
+Header: "Authorization: Bearer [token]"
+Response status code: 200 OK
+Response body: {
+  "id": 1,
+  "name": "Alice",
+  "email": "alice@email.com",
+  "created_at": "2019-07-18T13:33:44.476Z",
+  "updated_at"=>"2019-07-18T13:33:44.476Z"
+}
+```
+
+**Sem autorização**
+```
+GET /users/2
+Header: "Authorization: Bearer [token for user 1]"
+Response status code: 403 Forbidden
+```
+
+**Usuário não existent**
+```
+GET /users/1
+Header: "Authorization: Bearer [token]"
+Response status code: 404 Not Found
+```
+
+* Deletar usuário: `DELETE /users/:id` 
+
+**Sucesso**
+```
+DELETE /users/1
+Header: "Authorization: Bearer [token]"
+Response status code: 204 No Content
+```
+
+**Usuário não existente**
+```
+DELETE /users/0
+Header: "Authorization: Bearer [token]"
+Response status code: 401 Unauthorized
+```
+
+**Sem autorização**
+```
+DELETE /users/2
+Header: "Authorization: Bearer [token for user 1]"
+Response status code: 403 Forbidden
+```
+
+### Sessão (*sign_in/sign_out*)
+
+* Fazer login: `POST /users/sign_in`
+
+**Sucesso**
+**Sem autorização**
+
+* Fazer logout: `POST /users/sign_out`
+
+**Sucesso**
+**Sem autenticação**
+
+### Conta bancária (*Account*)
+
+Todos os endpoints de conta bancária exigem **autenticação**.
+
+* Criar nova conta: `POST /users/:user_id/accounts`
+
+**Sucesso**
+```
+POST /users/1/accounts
+Header: "Authorization: Bearer [token]"
+Response status code: 200 OK
+Response body: {
+  "id": 1,
+  "user_id": 1,
+  "balance": "0,00",
+  "balance_in_cents": 0
+  "created_at": "2019-07-18T14:01:33.362Z",
+  "updated_at": "2019-07-18T14:01:33.362Z",
+}
+```
+
+**Usuário inexistente**
+```
+POST /users/0/accounts
+Header: "Authorization: Bearer [token]"
+Response status code: 401 Unauthorized
+```
+
+**Sem autorização**
+```
+POST /users/2/accounts
+Header: "Authorization: Bearer [token for user 1]"
+Response status code: 403 Forbidden
+```
+
+* Listar contas de um usuário: `GET /users/:user_id/accounts`
+
+**Sucesso**
+```
+GET /users/1/accounts
+Header: "Authorization: Bearer [token]"
+Response status code: 200 OK
+Response body: {
+  "accounts": [
+    {id: 1, user_id: 1, balance: "0,00", balance_in_cents: 0, created_at: ..., updated_at: ...},
+    {id: 2, user_id: 1, balance: "0,00", balance_in_cents: 0, created_at: ..., updated_at: ...}
+  ]
+}
+```
+
+**Usuário inexistente**
+```
+GET /users/0/accounts
+Header: "Authorization: Bearer [token]"
+Response status code: 401 Unauthorized
+```
+
+**Sem autorização**
+```
+GET /users/2/accounts
+Header: "Authorization: Bearer [token for user 1]"
+Response status code: 403 Forbidden
+```
+
+* Obter conta: `GET /accounts/:id`
+
+**Sucesso**
+```
+GET /users/1/accounts
+Header: "Authorization: Bearer [token]"
+Response status code: 200 OK
+Response body: {
+  "id": 1,
+  "user_id": 1,
+  "balance": "0,00",
+  "balance_in_cents": 0
+  "created_at": "2019-07-18T14:01:33.362Z",
+  "updated_at": "2019-07-18T14:01:33.362Z",
+}
+```
+
+**Conta inexistente**
+```
+GET /accounts/0
+Header: "Authorization: Bearer [token]"
+Response status code: 401 Unauthorized
+```
+
+**Sem autorização**
+```
+GET /accounts/2
+Header: "Authorization: Bearer [token for user who doesn't own this account]"
+Response status code: 403 Forbidden
+```
+
+* Deletar conta: `DELETE /accounts:id`
+
+**Sucesso**
+```
+DELETE /accounts/1
+Header: "Authorization: Bearer [token]"
+Response status code: 204 No Content
+```
+
+**Conta inexistente**
+```
+DELETE /accounts/0
+Header: "Authorization: Bearer [token]"
+Response status code: 401 Unauthorized
+```
+
+**Sem autorização**
+```
+DELETE /accounts/2
+Header: "Authorization: Bearer [token for user who doesn't own this account]"
+Response status code: 403 Forbidden
+```
+
+* Consultar saldo: `GET /accounts/:account_id/balance`
+
+**Sucesso**
+```
+GET /accounts/1/balance
+Header: "Authorization: Bearer [token]"
+Response status code: 200 OK
+Response body: {
+  "balance": "0,00",
+  "balance_in_cents": 0
+}
+```
+
+**Conta inexistente**
+```
+GET /accounts/0/balance
+Header: "Authorization: Bearer [token]"
+Response status code: 401 Unauthorized
+```
+
+**Sem autorização**
+```
+GET /accounts/2/balance
+Header: "Authorization: Bearer [token for user who doesn't own this account]"
+Response status code: 403 Forbidden
+```
+
+* Transferir dinheiro: `POST /accounts/:account_id/transfer/:destination_account_id`
+
 ## TODO
 
-* write documentation
 * consider using dotenv gem to improve dev experience
+* corrigir resposta de get all accounts for a user
+* corrigir resposta de get balance
