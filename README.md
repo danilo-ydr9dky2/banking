@@ -22,17 +22,17 @@ Este sistema foi desenvolvido em `ruby 2.6.3`.
 
 ## Dependências
 
-Execute `bundle install` para instalar todas as dependências.
-
 * Ruby 2.6.3
 * PostgreSQL 11.2
 * Bundler 2.0.2
+* Demais dependências listadas no arquivo [Gemfile](https://github.com/danilo-ydr9dky2/banking/blob/master/Gemfile)
 
 ## Configuração
 
 * Instale [Ruby](https://www.ruby-lang.org/pt/documentation/installation/) na versão 2.6.3 ou superior.
 * Instale [PostgreSQL](https://www.postgresql.org/download/) na versão 11.2 ou superior.
 * Instale [Bundler](https://bundler.io/) com o comando `gem install bundle`
+* Depois, execute `bundle install` para instalar todas as dependências.
 
 ### Ambiente de desenvolvimento
 
