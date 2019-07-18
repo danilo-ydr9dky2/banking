@@ -1,5 +1,8 @@
 class AccountsController < ApplicationController
   class InsufficientFundsError < StandardError
+    def initialize
+      super("source account has insufficient funds to proceed with this transaction")
+    end
   end
 
   before_action :authenticate_user!
@@ -46,15 +49,8 @@ class AccountsController < ApplicationController
   # Request body:
   #     - amount: string - amount of reais (BRL) to be transferred, like "9,99"
   def transfer
-    source_id = params['account_id'].try(:to_i)
-    dest_id = params['destination_account_id'].try(:to_i)
-
-    # Account.lock yields a SELECT FOR UPDATE on Postgresql
-    accounts_hash = Account.lock.where(
-      id: [source_id, dest_id]
-    ).to_h { |act| [act.id, act] }
-    source_account = accounts_hash[source_id]
-    destination_account = accounts_hash[dest_id]
+    source_account = Account.find_by(id: params['account_id'])
+    destination_account = Account.find_by(id: params['destination_account_id'])
 
     # Return 404 in case neither source nor destination accounts are found
     return not_found unless source_account.present? and destination_account.present?
@@ -62,20 +58,31 @@ class AccountsController < ApplicationController
     return forbidden unless source_account.user == current_user
 
     # Makes sure amount is in the right format
-    amount = parse_amount(params)
-    if amount.nil?
+    amount_in_cents = parse_amount(params)
+    if amount_in_cents.nil?
         return render json: { errors: ["amount must be in the format 9,99"] }, status: :bad_request
     end
 
-    # Update `balance_in_cents` within a transaction
+    # Create credit and debit transactions within a transaction
+    # TODO: maybe add a last_transaction_at columns in the accounts table
     Account.transaction do
-      if source_account.balance_in_cents < amount
-        raise InsufficientFundsError.new("source account has insufficient funds to proceed with this transaction")
-      end
-      source_account.balance_in_cents -= amount
-      destination_account.balance_in_cents += amount
-      source_account.save!
-      destination_account.save!
+      # Hold locks on both accounts while the transactions are being created
+      Account.lock_for_update(source_account, destination_account)
+
+      raise InsufficientFundsError.new unless source_account.has_funds?(amount_in_cents)
+
+      debit = Transaction.create(
+        account_id: source_account.id,
+        amount_in_cents: amount_in_cents,
+        kind: :debit
+      )
+      credit = Transaction.create(
+        account_id: destination_account.id,
+        amount_in_cents: amount_in_cents,
+        kind: :credit
+      )
+      debit.save!
+      credit.save!
     rescue InsufficientFundsError => e
       return render json: { errors: [e.message] }, status: :forbidden
     end
@@ -92,6 +99,7 @@ class AccountsController < ApplicationController
 
   private
 
+  # It parses string amounts like "9,99" and it returns the amount in cents as an integer
   def parse_amount(params)
     return unless params['amount'].present?
     match_data = params['amount'].to_s.match(/(\d+),(\d{2})/)

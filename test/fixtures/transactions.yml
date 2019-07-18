@@ -1,0 +1,26 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+tr_frankie_a100:
+  account: frankie_a100
+  kind: credit
+  amount_in_cents: 10000  # R$100,00
+
+tr_frankie_a200:
+  account: frankie_a200
+  kind: credit
+  amount_in_cents: 20000  # R$200,00
+
+tr_norma_a901:
+  account: norma_a901
+  kind: credit
+  amount_in_cents: 901  # R$9,01
+
+tr_norma_a9999:
+  account: norma_a9999
+  kind: credit
+  amount_in_cents: 9999  # R$99,99
+
+tr_norma_a500:
+  account: norma_a500
+  kind: credit
+  amount_in_cents: 50000  # R$500,00
